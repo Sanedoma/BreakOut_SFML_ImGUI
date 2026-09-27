@@ -8,13 +8,13 @@
 #include "BallPhysics.hpp"
 #include "Brick.hpp"
 
-inline void resolveBrickCollisions(
+inline int resolveBrickCollisions(
     GameObject& ballObj,
     std::vector<std::unique_ptr<GameObject>>& entities
 ){
     auto* physics = ballObj.getComponent<BallPhysics>();
     auto* ballT = ballObj.getComponent<Transform>();
-    if(!physics  || !ballT) return;
+    if(!physics  || !ballT) return 0;
 
     for(auto& e : entities){
         Brick* brick = e->getComponent<Brick>();
@@ -45,8 +45,11 @@ inline void resolveBrickCollisions(
         }
         physics->setVelocity(v);
         
-        if (brick->hit())
-            e->alive = false;                        
-        break;   // une seule brique par frame : évite les rebonds incohérents
+        if (brick->hit()){
+            e->alive = false;
+            return 10;  
+        }                      
+        return 0; 
     }
+    return 0;
 }

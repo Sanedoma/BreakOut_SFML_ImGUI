@@ -19,6 +19,24 @@ void removeDeadEntities(std::vector<std::unique_ptr<GameObject>>& entities){
     );
 }
 
+void resetBall(GameObject& ball){
+    auto* t = ball.getComponent<Transform>();
+    auto* p = ball.getComponent<BallPhysics>();
+
+    if(!t || !p) return;
+
+    t->position = {400.f, 300.f};
+    p->setVelocity({200.f, -250.f});
+    p->resetFellOff();
+}
+
+bool bricksRemaining(std::vector<std::unique_ptr<GameObject>>& entities) {
+    for (auto& e : entities)
+        if (e->getComponent<Brick>() && e->alive)
+            return true;
+    return false;
+}
+
 int main(){
 
     sf::RenderWindow window(sf::VideoMode({800u, 600u}), "Breakout");
@@ -59,6 +77,25 @@ int main(){
         }
     }
 
+    int lives = 3;
+    int score = 0;
+
+    sf::Font font;
+    if(!font.openFromFile("assets/fonts/hunter-x-hunter-jap-sans-serif.otf")){
+        std::cerr << "Erreur : Impossible de charger la police.\n";
+        return 1;
+    }
+
+    sf::Text scoreText(font);
+    scoreText.setCharacterSize(24);
+    scoreText.setFillColor(sf::Color::White);
+    scoreText.setPosition({10.f, 10.f});
+
+    sf::Text livesText(font);
+    livesText.setCharacterSize(24);
+    livesText.setFillColor(sf::Color::White);
+    livesText.setPosition({650.f, 10.f});
+
     sf::Clock clock;
     while(window.isOpen()){
 
@@ -73,12 +110,36 @@ int main(){
             e->update(dt);
         
         resolvePaddleBounce(ball, paddle);
-        resolveBrickCollisions(ball, entities);
+        score += resolveBrickCollisions(ball, entities);
         removeDeadEntities(entities);
 
+        if (!bricksRemaining(entities)) {
+            std::cout << "VICTOIRE ! Score : " << score << "\n";
+            window.close();   // provisoire, comme le game over
+        }
+
+        // --- Gestion de la chute de balle ---
+        auto* ballPhysics = ball.getComponent<BallPhysics>();
+        if(ballPhysics && ballPhysics->hasFellOff()){
+            lives--;
+            std::cout << "vies restante: " << lives << "\n";
+            if(lives > 0)
+                resetBall(ball);
+            else
+                window.close();
+        }
+
         window.clear(sf::Color(30, 30, 40));
+
+        scoreText.setString("Score : " + std::to_string(score));
+        livesText.setString("Vies : " + std::to_string(lives));
+
         for(auto& e : entities)
             e->render(window);
+
+        window.draw(scoreText);
+        window.draw(livesText);
+
         window.display();
     }
 

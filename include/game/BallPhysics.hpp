@@ -8,6 +8,7 @@ class BallPhysics : public Component {
     sf::Vector2f velocity;
     float windowWidth;
     float windowHeight;
+    bool fellOff = false;
 
 public:
     BallPhysics(
@@ -40,9 +41,8 @@ public:
             velocity.y = -velocity.y;
         }
 
-        if (transform->position.y + transform->size.y > windowHeight) {
-            transform->position.y = windowHeight - transform->size.y;
-            velocity.y = -velocity.y;
+        if (transform->position.y > windowHeight) {
+            fellOff = true;
         }
     }
 
@@ -50,5 +50,6 @@ public:
         sf::Vector2f getVelocity() const { return velocity; }
         void setVelocity(sf::Vector2f v) { velocity = v; }
         Transform* getTransform() const { return transform; }
-
+        bool hasFellOff() const { return fellOff; }
+        void resetFellOff() { fellOff = false; }
 };
