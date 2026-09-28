@@ -18,6 +18,7 @@ FetchContent_MakeAvailable(SFML)
 
 add_executable(breakout
     src/main.cpp
+    src/engine/Game.cpp
 )
 
 target_include_directories(breakout PRIVATE include)
